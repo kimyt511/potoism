@@ -1,0 +1,171 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>potoism</title>
+    <link rel="stylesheet" href="/index.css" />
+  </head>
+  <body>
+    <div class="frame" id="frame">
+      <form
+        action="./uploadImage"
+        name="image_info"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        <div class="container">
+          <div class="grid_filebox">
+            <div class="filebox">
+              <label for="file1">
+                <img
+                  id="preview1"
+                  src="#"
+                  onerror="this.src='/defaultImage.png';"
+                />
+              </label>
+              <input
+                type="file"
+                id="file1"
+                name="image1"
+                onchange="previewImage(this)"
+              />
+            </div>
+            <div class="filebox">
+              <label for="file2">
+                <img
+                  id="preview2"
+                  src="#"
+                  onerror="this.src='/defaultImage.png';"
+                />
+              </label>
+              <input
+                type="file"
+                id="file2"
+                name="image2"
+                onchange="previewImage(this)"
+              />
+            </div>
+            <div class="filebox">
+              <label for="file3">
+                <img
+                  id="preview3"
+                  src="#"
+                  onerror="this.src='/defaultImage.png';"
+                />
+              </label>
+              <input
+                type="file"
+                id="file3"
+                name="image3"
+                onchange="previewImage(this)"
+              />
+            </div>
+            <div class="filebox">
+              <label for="file4">
+                <img
+                  id="preview4"
+                  src="#"
+                  onerror="this.src='/defaultImage.png';"
+                />
+              </label>
+              <input
+                type="file"
+                id="file4"
+                name="image4"
+                onchange="previewImage(this)"
+              />
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="frame_controller">
+      <button id="moveLeftFrame"></button>
+      <button id="moveRightFrame"></button>
+    </div>
+    <div class="interface">
+      <input
+        type="text"
+        id="phone_number"
+        placeholder="전화번호 뒷 4자리를 입력하세요"
+      />
+      <button type="submit" id="captureButton"></button>
+    </div>
+  </body>
+  <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
+  <script>
+    function previewImage(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+          const previewId = "preview" + input.name.slice(-1); // input 이름에서 마지막 숫자를 가져와서 ID를 생성합니다. 예: image1 -> preview1
+          document.getElementById(previewId).src = e.target.result;
+          document.getElementById(previewId).style.display = "block"; // 미리보기 이미지를 표시
+        };
+
+        reader.readAsDataURL(input.files[0]); // 사용자가 선택한 파일을 읽습니다.
+      }
+    }
+    document
+      .getElementById("captureButton")
+      .addEventListener("click", function() {
+        const form = document.getElementsByClassName("frame");
+        html2canvas(form).then(function(canvas) {
+          // Canvas에 그림
+          // Canvas의 이미지 데이터를 데이터 URL로 가져옵니다.
+          const newCanvas = document.createElement("canvas");
+          const newCtx = newCanvas.getContext("2d");
+          newCanvas.width = 628;
+          newCanvas.height = 888;
+
+          // 이미지를 새로운 크기로 그립니다.
+          newCtx.drawImage(
+            canvas,
+            0,
+            0,
+            canvas.width,
+            canvas.height,
+            0,
+            0,
+            628,
+            888
+          );
+          const imageDataURL = newCanvas.toDataURL("image/jpg"); // 원하는 포맷을 선택합니다.
+          const phone_numberInput = document.getElementById("phone_number");
+
+          // 이미지 데이터를 FormData에 추가
+          const formData = new FormData();
+          formData.append("imageDataURL", imageDataURL);
+          formData.append("phone_number", phone_numberInput.value);
+
+          fetch("/uploadImage", {
+            method: "POST",
+            body: formData // FormData를 전송합니다.
+          })
+            .then(response => {
+              if (response.redirected) {
+                window.location.href = response.url;
+              }
+            })
+            .catch(error => {
+              console.error(
+                "There was a problem with the fetch operation:",
+                error.message
+              );
+            });
+        });
+      });
+    var current_frame = 1;
+    document.getElementById("moveLeftFrame").addEventListener("click", () => {
+      const frame = document.getElementById("frame");
+      current_frame = current_frame == 1 ? 15 : current_frame - 1;
+      frame.style.backgroundImage = `url("./frame${current_frame}.png")`;
+    });
+    document.getElementById("moveRightFrame").addEventListener("click", () => {
+      const frame = document.getElementById("frame");
+      current_frame = current_frame == 15 ? 1 : current_frame + 1;
+      frame.style.backgroundImage = `url("./frame${current_frame}.png")`;
+    });
+  </script>
+</html>
